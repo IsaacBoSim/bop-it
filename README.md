@@ -4,7 +4,7 @@ Game Controller:
 - Connect to an Arduino board and use the following pins:
   - 2: button PUSH
   - 3: button PULL
-  - 4: button 
+  - 4: button TWIST
 - Place buttons in the slotted holes on the game controller case.
 - Connect the knobs to the case using elasic bands.
 - Close the case and secure using case closing caps
