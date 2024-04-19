@@ -1,5 +1,4 @@
 # bop-it game
-Isaac Sim
 
 Game Controller:
 - Connect to an Arduino board and use the following pins:
@@ -18,3 +17,6 @@ Game Rules:
 - If the player performs the command incorrectly, the player will lose a life
 - The game will end when the player has lost all 3 lives
 - The player can restart the game by pressing the RESET button
+
+
+Isaac Sim
