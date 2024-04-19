@@ -7,6 +7,7 @@ Game Controller:
   - 4: button 
 - Place buttons in the slotted holes on the game controller case.
 - Connect the knobs to the case using elasic bands.
+- Close the case and secure using case closing caps
 
 ![BopIt.png](BopIt.png)
 
