@@ -1,1 +1,2 @@
-# bop-it
+# bop-it game
+Isaac Sim
