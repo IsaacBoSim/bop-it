@@ -1,8 +1,10 @@
 #include <Arduino.h>
 
-const int buttonPins[] = {2, 3, 4}; // Button pins
+const int buttonPush = 2; // Button pin for "Push it!"
+const int buttonPull = 3; // Button pin for "Pull it!"
+const int buttonTwist = 4; // Corrected pin for "Twist it!"
+
 const char* commands[] = {"Push it!", "Pull it!", "Twist it!"};
-const int numButtons = sizeof(buttonPins) / sizeof(buttonPins[0]);
 
 unsigned long lastCommandTime;
 int currentButton = -1;
@@ -10,42 +12,27 @@ long responseTime = 5000; // Initial time to respond
 int lives = 3; // Player lives
 bool gameOver = false; // Game over status
 int score = 0; // Player score
-bool waitingForRelease = false;
 
 void setup() {
   Serial.begin(9600);
-  for (int i = 0; i < numButtons; i++) {
-    pinMode(buttonPins[i], INPUT_PULLUP);
-  }
+  pinMode(buttonPush, INPUT);
+  pinMode(buttonPull, INPUT);
+  pinMode(buttonTwist, INPUT);
+
   randomSeed(analogRead(0));
   giveCommand();
 }
 
 void loop() {
-  if (millis() - lastCommandTime > responseTime && !gameOver) {
-    Serial.println("Too slow!");
+  if (millis() - lastCommandTime > responseTime) {
+    Serial.print("Too slow! ");
     loseLife();
   }
 
   if (!gameOver) {
-    for (int i = 0; i < numButtons; i++) {
-      if (digitalRead(buttonPins[i]) == LOW && !waitingForRelease) {
-        if (i == currentButton) {
-          Serial.println("Correct!");
-          score++;
-          giveCommand();
-          if (score % 10 == 0) {
-            levelUp();
-          }
-        } else {
-          Serial.println("Wrong button!");
-          loseLife();
-        }
-        waitingForRelease = true;
-      } else if (digitalRead(buttonPins[i]) == HIGH) {
-        waitingForRelease = false;
-      }
-    }
+    checkButton(buttonPush, 0);
+    checkButton(buttonPull, 1);
+    checkButton(buttonTwist, 2);
   }
 
   if (gameOver) {
@@ -53,8 +40,21 @@ void loop() {
   }
 }
 
+void checkButton(int buttonPin, int buttonId) {
+  if (digitalRead(buttonPin) == HIGH) {
+    while (digitalRead(buttonPin) == HIGH) {
+      delay(10); // Debouncing
+    }
+    if (currentButton == buttonId) {
+      incrementScore();
+    } else {
+      loseLife();
+    }
+  }
+}
+
 void giveCommand() {
-  currentButton = random(0, numButtons);
+  currentButton = random(0, 3); // Selects 0, 1, or 2 corresponding to Push, Pull, Twist
   Serial.println(commands[currentButton]);
   lastCommandTime = millis();
 }
@@ -69,8 +69,11 @@ void endGame() {
 }
 
 void loseLife() {
-  Serial.println("You lose a life!");
+  Serial.print("You lose a life! ");
+  Serial.print("You have ");
   lives--;
+  Serial.print(lives);
+  Serial.println(" lives left!");
   if (lives <= 0) {
     endGame();
   } else {
@@ -80,17 +83,17 @@ void loseLife() {
 
 void handleRestart() {
   Serial.println("Press any button to restart.");
-  delay(500);
   while (true) {
-    for (int i = 0; i < numButtons; i++) {
-      if (digitalRead(buttonPins[i]) == LOW) {
-        gameOver = false;
-        lives = 3;
-        score = 0;
-        responseTime = 3000;
-        giveCommand();
-        return;
+    if (digitalRead(buttonPush) == HIGH || digitalRead(buttonPull) == HIGH || digitalRead(buttonTwist) == HIGH) {
+      while (digitalRead(buttonPush) == HIGH || digitalRead(buttonPull) == HIGH || digitalRead(buttonTwist) == HIGH) {
+        delay(10); // Wait for all buttons to be released
       }
+      gameOver = false;
+      lives = 3;
+      score = 0;
+      responseTime = 5000;
+      giveCommand();
+      break;
     }
   }
 }
@@ -98,4 +101,16 @@ void handleRestart() {
 void levelUp() {
   responseTime = max(1000, responseTime - 500); // Never go below 1 second
   Serial.println("Level up!");
+  delay(1500);
+}
+
+void incrementScore() {
+  score++;
+  Serial.print("Correct! ");
+  Serial.print("Your Score: ");
+  Serial.println(score);
+  if (score % 10 == 0) {
+    levelUp();
+  }
+  giveCommand();
 }
